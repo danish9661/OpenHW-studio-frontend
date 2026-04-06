@@ -513,6 +513,26 @@ export default function StudentClassDetailPage() {
                                           )}
                                         </button>
                                       </div>
+
+                                      {/* ── Teacher grade & feedback (visible once graded) ── */}
+                                      {submission && (submission.score != null || submission.feedback) ? (
+                                        <div className="student-grade-result">
+                                          <h4 className="student-grade-result__heading">Your Grade</h4>
+                                          {submission.score != null ? (
+                                            <p className="student-grade-result__score">
+                                              Score: <strong>{submission.score} / 100</strong>
+                                            </p>
+                                          ) : (
+                                            <p className="student-grade-result__pending">Not graded yet.</p>
+                                          )}
+                                          {submission.feedback ? (
+                                            <p className="student-grade-result__feedback">
+                                              <span className="student-grade-result__feedback-label">Feedback: </span>
+                                              {submission.feedback}
+                                            </p>
+                                          ) : null}
+                                        </div>
+                                      ) : null}
                                     </>
                                   ) : null}
                                 </div>

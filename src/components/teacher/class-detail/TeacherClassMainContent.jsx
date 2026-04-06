@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   CalendarDays,
   ChevronRight,
@@ -6,6 +7,7 @@ import {
   Loader2,
   Search,
   Trash2,
+  CheckCircle,
 } from "lucide-react";
 import StreamCard from "../../common/StreamCard.jsx";
 import ClassroomAttachmentBlock from "../../common/ClassroomAttachmentBlock.jsx";
@@ -15,6 +17,84 @@ import {
   getAvatarLetters,
 } from "../../common/test.js";
 import { pickAttachments } from "./helpers.js";
+import { gradeSubmission } from "../../../services/classroomService.js";
+
+// ─── Inline grading form for a single student submission ─────────────────────
+function SubmissionGradeForm({ submission, classId, assignmentId }) {
+  const [score, setScore] = useState(
+    submission.score != null ? String(submission.score) : ""
+  );
+  const [feedback, setFeedback] = useState(submission.feedback || "");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSave = async () => {
+    const parsed = score === "" ? undefined : Number(score);
+    if (parsed !== undefined && (isNaN(parsed) || parsed < 0 || parsed > 100)) {
+      setError("Score must be 0 – 100");
+      return;
+    }
+    setError("");
+    setSaving(true);
+    try {
+      await gradeSubmission(classId, assignmentId, submission._id, {
+        ...(parsed !== undefined && { score: parsed }),
+        ...(feedback.trim() && { feedback: feedback.trim() }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      setError(err.message || "Failed to save grade");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="teacher-submission-grade">
+      <div className="teacher-submission-grade__fields">
+        <label className="teacher-submission-grade__label">
+          Score (0–100)
+          <input
+            type="number"
+            min="0"
+            max="100"
+            className="teacher-submission-grade__score"
+            value={score}
+            onChange={(e) => { setScore(e.target.value); setSaved(false); }}
+            placeholder="—"
+          />
+        </label>
+        <label className="teacher-submission-grade__label teacher-submission-grade__label--feedback">
+          Feedback
+          <textarea
+            className="teacher-submission-grade__feedback"
+            rows={1}
+            value={feedback}
+            onChange={(e) => { setFeedback(e.target.value); setSaved(false); }}
+            placeholder="Optional feedback for student…"
+          />
+        </label>
+      </div>
+      {error && <p className="teacher-submission-grade__error">{error}</p>}
+      <button
+        type="button"
+        className={`teacher-submission-grade__save${saved ? " teacher-submission-grade__save--saved" : ""}`}
+        onClick={handleSave}
+        disabled={saving}
+      >
+        {saving ? (
+          <><Loader2 size={13} className="teacher-spin" /> Saving…</>
+        ) : saved ? (
+          <><CheckCircle size={13} /> Saved</>
+        ) : (
+          "Save Grade"
+        )}
+      </button>
+    </div>
+  );
+}
 
 function TeacherStreamTab({
   noticeInput,
@@ -87,6 +167,7 @@ function TeacherClassworkTab({
   deletingAssignmentId,
   submissionsState,
   onPreviewFile,
+  classId,
 }) {
   return (
     <section className="teacher-list-block teacher-list-block--classwork">
@@ -320,6 +401,12 @@ function TeacherClassworkTab({
                                       source={submission}
                                       wrapperClassName="classroom-files--submission"
                                       onPreviewFile={onPreviewFile}
+                                    />
+
+                                    <SubmissionGradeForm
+                                      submission={submission}
+                                      classId={classId}
+                                      assignmentId={activeAssignmentId}
                                     />
                                   </div>
                                 </article>

@@ -297,3 +297,50 @@ export const deleteClassComment = async (classId, commentId) => {
 
   return parseResponse(response, 'Failed to delete comment')
 }
+
+// ─── Grading & Feedback ───────────────────────────────────────────────────────
+
+/**
+ * Teacher: save a score and/or feedback for a student's submission.
+ *
+ * PATCH /api/classroom/:classId/assignments/:assignmentId/submissions/:submissionId/grade
+ *
+ * @param {string} classId
+ * @param {string} assignmentId
+ * @param {string} submissionId
+ * @param {{ score?: number, feedback?: string }} payload
+ * @returns {{ message: string, submission: object }}
+ */
+export const gradeSubmission = async (classId, assignmentId, submissionId, payload) => {
+  const response = await fetch(
+    `${BASE_URL}/classroom/${classId}/assignments/${assignmentId}/submissions/${submissionId}/grade`,
+    {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    }
+  )
+  return parseResponse(response, 'Failed to grade submission')
+}
+
+/**
+ * Student: fetch their own submission for an assignment.
+ * The response includes .score and .feedback once the teacher has graded.
+ *
+ * GET /api/classroom/:classId/assignments/:assignmentId/submission
+ * (reuses the existing single-submission endpoint — no new route needed)
+ *
+ * @param {string} classId
+ * @param {string} assignmentId
+ * @returns {{ assignment: object, submission: object | null }}
+ */
+export const getMySubmissionGrade = async (classId, assignmentId) => {
+  const response = await fetch(
+    `${BASE_URL}/classroom/${classId}/assignments/${assignmentId}/submission`,
+    {
+      method: 'GET',
+      headers: authHeaders()
+    }
+  )
+  return parseResponse(response, 'Failed to fetch your grade')
+}

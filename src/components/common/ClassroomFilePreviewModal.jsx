@@ -1,7 +1,39 @@
-import { ExternalLink, FileText, X } from "lucide-react";
-
 const isPdfFile = (url = "") => /\.pdf(\?.*)?$/i.test(url);
 const isImageFile = (url = "") => /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(url);
+
+function IconExternalLink({ size = 14 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M14 3h7v7" />
+      <path d="M10 14 21 3" />
+      <path d="M21 14v7h-7" />
+      <path d="M3 10V3h7" />
+      <path d="M3 21h7v-7" />
+      <path d="M14 21 3 10" />
+    </svg>
+  );
+}
+
+function IconFileText({ size = 26 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6" />
+      <path d="M16 13H8" />
+      <path d="M16 17H8" />
+      <path d="M10 9H8" />
+    </svg>
+  );
+}
+
+function IconClose({ size = 18 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  );
+}
 
 export default function ClassroomFilePreviewModal({ file, onClose }) {
   if (!file?.url) {
@@ -36,7 +68,7 @@ export default function ClassroomFilePreviewModal({ file, onClose }) {
               rel="noreferrer"
               className="classroom-preview-modal__open"
             >
-              <ExternalLink size={14} />
+              <IconExternalLink size={14} />
               Open in new tab
             </a>
             <button
@@ -45,7 +77,7 @@ export default function ClassroomFilePreviewModal({ file, onClose }) {
               className="classroom-preview-modal__close"
               aria-label="Close preview"
             >
-              <X size={18} />
+              <IconClose size={18} />
             </button>
           </div>
         </header>
@@ -74,7 +106,7 @@ export default function ClassroomFilePreviewModal({ file, onClose }) {
           {!showImage && !showPdf ? (
             <div className="classroom-preview-modal__empty">
               <span className="classroom-preview-modal__empty-icon">
-                <FileText size={26} />
+                <IconFileText size={26} />
               </span>
               <h4>
                 Preview not available
