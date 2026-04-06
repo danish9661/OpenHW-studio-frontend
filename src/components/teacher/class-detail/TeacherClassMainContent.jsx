@@ -67,7 +67,7 @@ function SubmissionGradeForm({ submission, classId, assignmentId }) {
           />
         </label>
         <label className="teacher-submission-grade__label teacher-submission-grade__label--feedback">
-          Feedback
+          Feedback:
           <textarea
             className="teacher-submission-grade__feedback"
             rows={1}
