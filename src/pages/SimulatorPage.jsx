@@ -214,6 +214,25 @@ const GROUP_COLORS = {
   'Memory': '#8b5cf6', 'Displays': '#ec4899', 'Sensors': '#14b8a6', 'Logic': '#8b5cf6',
 };
 
+class PaletteErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error(`Palette rendering error for ${this.props.compId}:`, error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div className="p-2 text-red-500 text-xs">Error: {this.state.error.message}</div>;
+    }
+    return this.props.children;
+  }
+}
+
 export default function SimulatorPage({ gamificationMode = false }) {
   const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
@@ -2140,6 +2159,10 @@ export default function SimulatorPage({ gamificationMode = false }) {
     if (comp.type === 'wokwi-led') {
       delete attrs.value; // Let ui.tsx handle it
     } else if (comp.type === 'wokwi-servo') {
+      if (remoteState && remoteState.angle !== undefined) {
+        attrs.angle = remoteState.angle.toString();
+      }
+    } else if (comp.type === 'wokwi-stepper-motor') {
       if (remoteState && remoteState.angle !== undefined) {
         attrs.angle = remoteState.angle.toString();
       }

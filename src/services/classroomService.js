@@ -14,6 +14,17 @@ const authHeaders = () => {
   }
 }
 
+const authOnlyHeaders = () => {
+  const token = getToken()
+  if (!token) {
+    throw new Error('No token found. Please sign in again.')
+  }
+
+  return {
+    Authorization: `Bearer ${token}`
+  }
+}
+
 const parseResponse = async (response, fallbackErrorMessage) => {
   const data = await response.json()
   if (!response.ok) {
@@ -158,6 +169,25 @@ export const getAssignmentSubmissions = async (classId, assignmentId) => {
   return parseResponse(response, 'Failed to fetch assignment submissions')
 }
 
+export const getMyAssignmentSubmission = async (classId, assignmentId) => {
+  const response = await fetch(`${BASE_URL}/classroom/${classId}/assignments/${assignmentId}/submission`, {
+    method: 'GET',
+    headers: authHeaders()
+  })
+
+  return parseResponse(response, 'Failed to fetch assignment submission')
+}
+
+export const submitAssignment = async (classId, assignmentId, payload) => {
+  const response = await fetch(`${BASE_URL}/classroom/${classId}/assignments/${assignmentId}/submission`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(payload)
+  })
+
+  return parseResponse(response, 'Failed to submit assignment')
+}
+
 export const getClassroomNotices = async (classId) => {
   const response = await fetch(`${BASE_URL}/classroom/${classId}/notices?limit=20`, {
     method: 'GET',
@@ -221,6 +251,31 @@ export const createClassComment = async (classId, commentPayload) => {
   return data.comment
 }
 
+export const uploadClassroomAssets = async (payload) => {
+  const formData = new FormData()
+
+  ;(payload.files || []).forEach((file) => {
+    formData.append('files', file)
+  })
+
+  if (payload.category) {
+    formData.append('category', payload.category)
+  }
+
+  if (payload.classId) {
+    formData.append('classId', payload.classId)
+  }
+
+  const response = await fetch(`${BASE_URL}/classroom/uploads`, {
+    method: 'POST',
+    headers: authOnlyHeaders(),
+    body: formData
+  })
+
+  const data = await parseResponse(response, 'Failed to upload classroom files')
+  return data.files || []
+}
+
 export const getClassComments = async (classId, postId, postType) => {
   const response = await fetch(
     `${BASE_URL}/classroom/${classId}/comments?postId=${encodeURIComponent(postId)}&postType=${encodeURIComponent(postType)}`,
@@ -241,4 +296,51 @@ export const deleteClassComment = async (classId, commentId) => {
   })
 
   return parseResponse(response, 'Failed to delete comment')
+}
+
+// ─── Grading & Feedback ───────────────────────────────────────────────────────
+
+/**
+ * Teacher: save a score and/or feedback for a student's submission.
+ *
+ * PATCH /api/classroom/:classId/assignments/:assignmentId/submissions/:submissionId/grade
+ *
+ * @param {string} classId
+ * @param {string} assignmentId
+ * @param {string} submissionId
+ * @param {{ score?: number, feedback?: string }} payload
+ * @returns {{ message: string, submission: object }}
+ */
+export const gradeSubmission = async (classId, assignmentId, submissionId, payload) => {
+  const response = await fetch(
+    `${BASE_URL}/classroom/${classId}/assignments/${assignmentId}/submissions/${submissionId}/grade`,
+    {
+      method: 'PATCH',
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    }
+  )
+  return parseResponse(response, 'Failed to grade submission')
+}
+
+/**
+ * Student: fetch their own submission for an assignment.
+ * The response includes .score and .feedback once the teacher has graded.
+ *
+ * GET /api/classroom/:classId/assignments/:assignmentId/submission
+ * (reuses the existing single-submission endpoint — no new route needed)
+ *
+ * @param {string} classId
+ * @param {string} assignmentId
+ * @returns {{ assignment: object, submission: object | null }}
+ */
+export const getMySubmissionGrade = async (classId, assignmentId) => {
+  const response = await fetch(
+    `${BASE_URL}/classroom/${classId}/assignments/${assignmentId}/submission`,
+    {
+      method: 'GET',
+      headers: authHeaders()
+    }
+  )
+  return parseResponse(response, 'Failed to fetch your grade')
 }
